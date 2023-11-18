@@ -1,4 +1,5 @@
 use std::env;
+mod error;
 mod model;
 mod repo;
 mod repo_impl;
@@ -20,29 +21,27 @@ fn main() {
                 println!("create todo need label");
                 return;
             }
-            s.create_one(service::CreateOne {
+            match s.create_one(service::CreateOne {
                 label: args[2].to_owned(),
-            });
+            }) {
+                Ok(todo) => {
+                    println!("todo created with id: {}", todo.id.unwrap());
+                }
+                Err(err) => error::map_and_print_error(err),
+            }
         }
         "toggle" => {
             if args.len() < 3 {
                 println!("create todo need id");
                 return;
             }
-            let _todo = s.get_by_id(service::GetById {
+            match s.toggle_state(service::ToggleState {
                 id: args[2].parse::<u32>().unwrap(),
-            });
-            match _todo.id {
-                Some(_) => {
-                    s.update_one(service::UpdateOne {
-                        id: _todo.id.unwrap(),
-                        label: _todo.label,
-                        state: !_todo.state,
-                    });
+            }) {
+                Ok(todo) => {
+                    println!("todo with id {} updated", todo.id.unwrap())
                 }
-                None => {
-                    println!("todo not found");
-                }
+                Err(err) => error::map_and_print_error(err),
             }
         }
         "delete" => {
@@ -50,18 +49,13 @@ fn main() {
                 println!("create todo need id");
                 return;
             }
-            let _todo = s.get_by_id(service::GetById {
+            match s.deleted(service::Delete {
                 id: args[2].parse::<u32>().unwrap(),
-            });
-            match _todo.id {
-                Some(_) => {
-                    s.deleted_by_id(service::DeleteById {
-                        id: _todo.id.unwrap(),
-                    });
+            }) {
+                Ok(todo) => {
+                    println!("todo with id {} deleted", todo.id.unwrap())
                 }
-                None => {
-                    println!("todo not found");
-                }
+                Err(err) => error::map_and_print_error(err),
             }
         }
         _ => {}

@@ -1,4 +1,4 @@
-use crate::{model, repo};
+use crate::{error, model, repo};
 use std::{fs::File, path::Path};
 
 pub struct TodoImpl {
@@ -12,13 +12,28 @@ impl TodoImpl {
         }
     }
 }
-impl repo::Todo for TodoImpl {
-    fn get(&self) -> Vec<model::Todo> {
-        let file = File::open(self.path).expect("error open file");
-        let users: Vec<model::Todo> = serde_json::from_reader(file).expect("error parse data");
-        users
+
+fn save_to_json<T: serde::Serialize>(path: &'static Path, payload: &T) -> error::Result<()> {
+    match File::create(path) {
+        Ok(writer) => match serde_json::to_writer(writer, payload) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(error::Error::WriteFileFailed),
+        },
+        Err(_) => Err(error::Error::LoadFileFailed),
     }
-    fn save(&self, todo: &mut model::Todo) -> model::Todo {
+}
+
+impl repo::Todo for TodoImpl {
+    fn get(&self) -> error::Result<Vec<model::Todo>> {
+        match File::open(self.path) {
+            Ok(file) => match serde_json::from_reader(file) {
+                Ok(users) => Ok(users),
+                Err(_) => Err(error::Error::ParseFileFailed),
+            },
+            Err(_) => Err(error::Error::LoadFileFailed),
+        }
+    }
+    fn save(&self, todo: &mut model::Todo) -> error::Result<model::Todo> {
         let reader = File::open(self.path).expect("error open file reader");
         let mut users: Vec<model::Todo> =
             serde_json::from_reader(reader).expect("error parse data");
@@ -42,11 +57,10 @@ impl repo::Todo for TodoImpl {
             }
         }
 
-        let writer = File::create(self.path).expect("error open file writer");
-        serde_json::to_writer(writer, &users).expect("error writing");
-        todo.to_owned()
+        save_to_json(self.path, &users)?;
+        Ok(todo.to_owned())
     }
-    fn delete(&self, id: u32) -> model::Todo {
+    fn delete(&self, id: u32) -> error::Result<model::Todo> {
         let reader = File::open(self.path).expect("error open file reader");
         let mut users: Vec<model::Todo> =
             serde_json::from_reader(reader).expect("error parse data");
@@ -59,8 +73,7 @@ impl repo::Todo for TodoImpl {
             deleted_user = users[deleted_index].clone();
             users.remove(deleted_index);
         }
-        let writer = File::create(self.path).expect("error open file writer");
-        serde_json::to_writer(writer, &users).expect("error writing");
-        deleted_user
+        save_to_json(self.path, &users)?;
+        Ok(deleted_user)
     }
 }

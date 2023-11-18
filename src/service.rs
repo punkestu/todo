@@ -1,4 +1,4 @@
-use crate::{model, repo};
+use crate::{error, model, repo};
 
 pub struct Todo<'a> {
     _repo: &'a dyn repo::Todo,
@@ -12,13 +12,11 @@ pub struct CreateOne {
     pub label: String,
 }
 
-pub struct UpdateOne {
+pub struct ToggleState {
     pub id: u32,
-    pub label: String,
-    pub state: bool,
 }
 
-pub struct DeleteById {
+pub struct Delete {
     pub id: u32,
 }
 
@@ -27,40 +25,39 @@ impl<'a> Todo<'a> {
         Todo { _repo }
     }
     pub fn display_all(&self) {
-        for user in self._repo.get() {
-            println!("{}", user);
+        match self._repo.get() {
+            Ok(users) => {
+                for user in users {
+                    println!("{}", user);
+                }
+            }
+            Err(err) => error::map_and_print_error(err),
         }
     }
-    pub fn get_by_id(&self, params: GetById) -> model::Todo {
-        match self
-            ._repo
-            .get()
-            .iter()
-            .find(|_todo| _todo.id.unwrap() == params.id)
-        {
-            Some(_todo) => _todo.clone(),
-            None => model::Todo {
-                id: None,
-                label: String::from(""),
-                state: false,
-            },
+    pub fn get_by_id(&self, params: GetById) -> error::Result<model::Todo> {
+        let users = self._repo.get()?;
+        match users.iter().find(|_todo| _todo.id.unwrap() == params.id) {
+            Some(_todo) => Ok(_todo.clone()),
+            None => Err(error::Error::TodoNotFound),
         }
     }
-    pub fn create_one(&self, params: CreateOne) -> model::Todo {
+    pub fn create_one(&self, params: CreateOne) -> error::Result<model::Todo> {
         self._repo.save(&mut model::Todo {
             id: None,
             label: params.label,
             state: false,
         })
     }
-    pub fn update_one(&self, params: UpdateOne) -> model::Todo {
+    pub fn toggle_state(&self, params: ToggleState) -> error::Result<model::Todo> {
+        let todo = self.get_by_id(GetById { id: params.id })?;
         self._repo.save(&mut model::Todo {
             id: Some(params.id),
-            label: params.label,
-            state: params.state,
+            label: todo.label,
+            state: !todo.state,
         })
     }
-    pub fn deleted_by_id(&self, params: DeleteById) -> model::Todo {
+    pub fn deleted(&self, params: Delete) -> error::Result<model::Todo> {
+        self.get_by_id(GetById { id: params.id })?;
         self._repo.delete(params.id)
     }
 }
