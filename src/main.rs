@@ -7,7 +7,7 @@ mod service;
 fn main() {
     let args: Vec<String> = env::args().collect();
     let r = repo_impl::TodoImpl::new("data/data.json");
-    let s = service::Todo::new(r);
+    let s = service::Todo::new(&r);
 
     if args.len() < 2 {
         s.display_all();

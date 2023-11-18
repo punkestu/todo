@@ -1,4 +1,4 @@
-use crate::model;
+use crate::{model, repo};
 use std::{fs::File, path::Path};
 
 pub struct TodoImpl {
@@ -11,12 +11,14 @@ impl TodoImpl {
             path: Path::new(path),
         }
     }
-    pub fn get(&self) -> Vec<model::Todo> {
+}
+impl repo::Todo for TodoImpl {
+    fn get(&self) -> Vec<model::Todo> {
         let file = File::open(self.path).expect("error open file");
         let users: Vec<model::Todo> = serde_json::from_reader(file).expect("error parse data");
         users
     }
-    pub fn save(&self, todo: &mut model::Todo) -> model::Todo {
+    fn save(&self, todo: &mut model::Todo) -> model::Todo {
         let reader = File::open(self.path).expect("error open file reader");
         let mut users: Vec<model::Todo> =
             serde_json::from_reader(reader).expect("error parse data");
@@ -44,7 +46,7 @@ impl TodoImpl {
         serde_json::to_writer(writer, &users).expect("error writing");
         todo.to_owned()
     }
-    pub fn delete(&self, id: u32) -> model::Todo {
+    fn delete(&self, id: u32) -> model::Todo {
         let reader = File::open(self.path).expect("error open file reader");
         let mut users: Vec<model::Todo> =
             serde_json::from_reader(reader).expect("error parse data");

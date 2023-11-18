@@ -1,7 +1,7 @@
-use crate::{model, repo_impl};
+use crate::{model, repo};
 
-pub struct Todo {
-    _repo: repo_impl::TodoImpl,
+pub struct Todo<'a> {
+    _repo: &'a dyn repo::Todo,
 }
 
 pub struct GetById {
@@ -22,13 +22,11 @@ pub struct DeleteById {
     pub id: u32,
 }
 
-impl Todo {
-    pub fn new(_repo: repo_impl::TodoImpl) -> Self {
+impl<'a> Todo<'a> {
+    pub fn new(_repo: &'a impl repo::Todo) -> Self {
         Todo { _repo }
     }
     pub fn display_all(&self) {
-        println!("==TODO LIST==");
-        println!("-------------");
         for user in self._repo.get() {
             println!("{}", user);
         }

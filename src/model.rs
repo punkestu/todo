@@ -14,7 +14,7 @@ impl Display for Todo {
             Some(id) => {
                 write!(
                     f,
-                    "{} | {} [{}]",
+                    "{} | {} | {}",
                     id,
                     self.label,
                     if self.state { "X" } else { "_" }
