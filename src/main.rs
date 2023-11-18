@@ -35,13 +35,14 @@ fn main() {
                 println!("create todo need id");
                 return;
             }
-            match s.toggle_state(service::ToggleState {
-                id: args[2].parse::<u32>().unwrap(),
-            }) {
-                Ok(todo) => {
-                    println!("todo with id {} updated", todo.id.unwrap())
-                }
-                Err(err) => error::map_and_print_error(err),
+            match args[2].parse::<u32>() {
+                Ok(id) => match s.toggle_state(service::ToggleState { id }) {
+                    Ok(todo) => {
+                        println!("todo with id {} updated", todo.id.unwrap())
+                    }
+                    Err(err) => error::map_and_print_error(err),
+                },
+                Err(_) => println!("id not valid"),
             }
         }
         "delete" => {
@@ -49,13 +50,15 @@ fn main() {
                 println!("create todo need id");
                 return;
             }
-            match s.deleted(service::Delete {
-                id: args[2].parse::<u32>().unwrap(),
-            }) {
-                Ok(todo) => {
-                    println!("todo with id {} deleted", todo.id.unwrap())
-                }
-                Err(err) => error::map_and_print_error(err),
+
+            match args[2].parse::<u32>() {
+                Ok(id) => match s.deleted(service::Delete { id }) {
+                    Ok(todo) => {
+                        println!("todo with id {} deleted", todo.id.unwrap())
+                    }
+                    Err(err) => error::map_and_print_error(err),
+                },
+                Err(_) => println!("id not valid"),
             }
         }
         _ => {}

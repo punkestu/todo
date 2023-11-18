@@ -43,9 +43,8 @@ impl<'a> Todo<'a> {
     }
     pub fn create_one(&self, params: CreateOne) -> error::Result<model::Todo> {
         self._repo.save(&mut model::Todo {
-            id: None,
             label: params.label,
-            state: false,
+            ..Default::default()
         })
     }
     pub fn toggle_state(&self, params: ToggleState) -> error::Result<model::Todo> {
