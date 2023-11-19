@@ -10,7 +10,7 @@ pub struct TodoImpl {
 }
 
 impl TodoImpl {
-    pub fn new(path: &'static str) -> Self {
+    pub fn _new(path: &'static str) -> Self {
         TodoImpl {
             path: Path::new(path),
         }

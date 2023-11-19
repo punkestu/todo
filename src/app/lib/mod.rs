@@ -1,6 +1,8 @@
 use crate::error;
 use std::{fs::File, path::Path};
 
+pub mod db_conn;
+
 pub fn read_from_json<T: serde::de::DeserializeOwned>(
     path: &'static Path,
 ) -> error::Result<Vec<T>> {

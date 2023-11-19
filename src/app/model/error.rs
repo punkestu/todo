@@ -3,6 +3,7 @@ pub const WRITE_FILE_FAILED: &str = "failed when write file";
 pub const PARSE_DATA_FAILED: &str = "failed when parse data";
 pub const TODO_NOT_FOUND: &str = "todo not found";
 
+#[derive(Debug)]
 pub enum Error {
     TodoNotFound,
     LoadFileFailed,
