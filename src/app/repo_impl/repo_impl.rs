@@ -1,5 +1,9 @@
-use crate::{error, model, repo};
-use std::{fs::File, path::Path};
+use crate::{
+    error,
+    lib::{read_from_json, save_to_json},
+    model, repo,
+};
+use std::path::Path;
 
 pub struct TodoImpl {
     path: &'static Path,
@@ -13,30 +17,12 @@ impl TodoImpl {
     }
 }
 
-fn save_to_json<T: serde::Serialize>(path: &'static Path, payload: &T) -> error::Result<()> {
-    match File::create(path) {
-        Ok(writer) => match serde_json::to_writer(writer, payload) {
-            Ok(_) => Ok(()),
-            Err(_) => Err(error::Error::WriteFileFailed),
-        },
-        Err(_) => Err(error::Error::LoadFileFailed),
-    }
-}
-
 impl repo::Todo for TodoImpl {
     fn get(&self) -> error::Result<Vec<model::Todo>> {
-        match File::open(self.path) {
-            Ok(file) => match serde_json::from_reader(file) {
-                Ok(users) => Ok(users),
-                Err(_) => Err(error::Error::ParseFileFailed),
-            },
-            Err(_) => Err(error::Error::LoadFileFailed),
-        }
+        read_from_json(self.path)
     }
     fn save(&self, todo: &mut model::Todo) -> error::Result<model::Todo> {
-        let reader = File::open(self.path).expect("error open file reader");
-        let mut users: Vec<model::Todo> =
-            serde_json::from_reader(reader).expect("error parse data");
+        let mut users: Vec<model::Todo> = read_from_json(self.path)?;
         match todo.id {
             None => {
                 match users.last() {
@@ -61,13 +47,9 @@ impl repo::Todo for TodoImpl {
         Ok(todo.to_owned())
     }
     fn delete(&self, id: u32) -> error::Result<model::Todo> {
-        let reader = File::open(self.path).expect("error open file reader");
-        let mut users: Vec<model::Todo> =
-            serde_json::from_reader(reader).expect("error parse data");
+        let mut users: Vec<model::Todo> = read_from_json(self.path)?;
         let mut deleted_user = model::Todo {
-            id: None,
-            label: String::from(""),
-            state: false,
+            ..Default::default()
         };
         if let Some(deleted_index) = users.iter().position(|user| user.id.unwrap() == id) {
             deleted_user = users[deleted_index].clone();
