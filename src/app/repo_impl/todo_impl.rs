@@ -1,7 +1,7 @@
 use crate::{
     error,
     lib::{read_from_json, save_to_json},
-    model, repo,
+    repo, todo,
 };
 use std::path::Path;
 
@@ -18,11 +18,11 @@ impl TodoImpl {
 }
 
 impl repo::Todo for TodoImpl {
-    fn get(&self) -> error::Result<Vec<model::Todo>> {
+    fn get(&self) -> error::Result<Vec<todo::Todo>> {
         read_from_json(self.path)
     }
-    fn save(&self, todo: &mut model::Todo) -> error::Result<model::Todo> {
-        let mut users: Vec<model::Todo> = read_from_json(self.path)?;
+    fn save(&self, todo: &mut todo::Todo) -> error::Result<todo::Todo> {
+        let mut users: Vec<todo::Todo> = read_from_json(self.path)?;
         match todo.id {
             None => {
                 match users.last() {
@@ -46,9 +46,9 @@ impl repo::Todo for TodoImpl {
         save_to_json(self.path, &users)?;
         Ok(todo.to_owned())
     }
-    fn delete(&self, id: u32) -> error::Result<model::Todo> {
-        let mut users: Vec<model::Todo> = read_from_json(self.path)?;
-        let mut deleted_user = model::Todo {
+    fn delete(&self, id: u32) -> error::Result<todo::Todo> {
+        let mut users: Vec<todo::Todo> = read_from_json(self.path)?;
+        let mut deleted_user = todo::Todo {
             ..Default::default()
         };
         if let Some(deleted_index) = users.iter().position(|user| user.id.unwrap() == id) {
